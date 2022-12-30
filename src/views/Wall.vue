@@ -82,11 +82,32 @@
         <div class="color-list">
           <div class="color-item" v-for="(item, index) in cardListColor" :style="{ background: item }" :key="item" @click="selectColor(index)" :class="isColor == index ? 'isColorSelect' : ''"></div>
         </div>
-
-        <div class="newcard">
+        <!-- 新建卡片 -->
+        <div class="newcard" :style="{ background: cardColor[isColor] }">
           <!-- 新建卡片信息。 -->
           <textarea class="textarea" placeholder="留言..."></textarea>
-          <input type="text">
+          <input type="text" class="signature" placeholder="签名..." />
+        </div>
+
+        <!-- 选择标签 -->
+        <div class="select-label">选择标签</div>
+        <div class="labels">
+          <span v-for="(item, index) in label[0]" :key="item" @click="selectLabel(index)" :class="isLabelSelect == index ? 'isLabelSelect' : ''">{{ item }}</span>
+        </div>
+        <!-- 免责声明。 -->
+        <div class="select-label liability">免责声明</div>
+        <div class="responibility">
+          <p>熊仔留言墙是本人独自开发的，为便于与用户交流的留言平台。请遵守如下内容：</p>
+          <p>
+            1、凡本网站转载的所有的文章、图片、音频视频文件等资料的版权归版权所有人所有，本站采用的非本站原创文章及图片等内容无法一一和版权者联系。<br />
+            2、如果本网所选内容的文章作者及编辑认为其作品不宜上网供大家浏览，或不应无偿使用，请及时用电子邮件或电话通知我们，以迅速采取适当措施，避免给双方造成不必要的经济损失。
+          </p>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="btn-bottom">
+          <button class="discard" @click="giveUp">丢弃</button>
+          <button class="confirm" @click="submit">确定</button>
         </div>
       </div>
     </van-popup>
@@ -94,15 +115,17 @@
 </template>
 
 <script>
-import { label, cardListColor } from "@/utils/data";
+import { label, cardListColor, cardColor } from "@/utils/data";
 export default {
   name: "Wall",
   data() {
     return {
       label, //当前的标签
       cardListColor, //新建卡片选择颜色列表。
+      cardColor, //透明卡片颜色选择列表
       isShow: true, //添加留言的弹出层是否显示
       isColor: 0, //当前选中的颜色值列表的索引。
+      isLabelSelect: 0, //选择标签的索引值
     };
   },
   methods: {
@@ -118,6 +141,18 @@ export default {
     selectColor(index) {
       this.isColor = index;
     },
+    //选择标签
+    selectLabel(index) {
+      this.isLabelSelect = index;
+    },
+    // 丢弃
+    giveUp() {
+      this.isShow = false;
+    },
+    // 确定
+    submit() {
+      this.isShow = false;
+    },
   },
 };
 </script>
@@ -130,8 +165,14 @@ export default {
   .isLike {
     color: #f67770;
   }
+  // 选择颜色列表索引。
   .isColorSelect {
     border: 0.02rem solid rgba(59, 115, 240, 1) !important;
+  }
+  // 选择标签。
+  .isLabelSelect {
+    background: #ebebeb;
+    font-weight: 600;
   }
   .msg {
     padding: 0 0.3rem;
@@ -204,10 +245,12 @@ export default {
     }
   }
   .popup {
+    position: relative;
+    height: 100%;
     padding: 0 0.4rem;
 
     .title {
-      margin-top: 0.3rem;
+      margin-top: 0.34rem;
       font-size: 0.32rem;
       color: #202020;
       font-weight: 600;
@@ -230,14 +273,79 @@ export default {
       height: 4.8rem;
       background: rgba(146, 230, 245, 0.3);
       font-family: xp;
-      margin: 0 auto 0.24rem;
+      margin: 0 auto 0.36rem;
       padding: 0.4rem;
       .textarea {
         width: 100%;
-        height: 80%;
+        height: 3.3rem;
         background-color: transparent;
         border: 0;
       }
+      .signature {
+        width: 6.22rem;
+        height: 0.72rem;
+        margin-left: -0.16rem;
+        border: 1px solid rgba(255, 255, 255, 1);
+        background-color: transparent;
+        padding-left: 0.16rem;
+      }
+    }
+    .select-label {
+      font-size: 0.28rem;
+      color: #202020;
+      font-weight: 600;
+    }
+    .labels {
+      display: flex;
+      flex-wrap: wrap;
+      span {
+        width: 0.96rem;
+        height: 0.48rem;
+        font-size: 0.28rem;
+        color: #202020;
+        text-align: center;
+        line-height: 0.48rem;
+        border-radius: 0.24rem;
+        margin: 0.36rem 0.15rem 0 0;
+      }
+    }
+    .liability {
+      margin-top: 0.3rem;
+      margin-bottom: 0.24rem;
+    }
+    .btn-bottom {
+      width: 100%;
+      height: 1.44rem;
+      // position: fixed;
+      // left: 0;
+      // bottom: -1.5rem;
+      display: flex;
+      justify-content: center;
+      padding-top: 0.24rem;
+      padding-bottom: 0.24rem;
+      background-color: #fff;
+      .discard {
+        width: 2rem;
+        height: 0.96rem;
+        margin-right: 0.4rem;
+        border-radius: 0.48rem;
+        border: 1px solid rgba(32, 32, 32, 1);
+        background: #ffffff;
+        color: #202020;
+      }
+      .confirm {
+        width: 4.6rem;
+        height: 0.96rem;
+        border-radius: 0.48rem;
+        background: #202020;
+        border: 1px solid rgba(32, 32, 32, 1);
+        color: #ffffff;
+      }
+    }
+    .responibility {
+      font-size: 0.24rem;
+      color: #949494;
+      line-height: 0.36rem;
     }
   }
 }

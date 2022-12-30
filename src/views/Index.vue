@@ -1,7 +1,7 @@
 <template>
   <div class="Index">
     <!-- 遮罩背景。 -->
-    <video src="../assets/bg.mp4" class="mark"></video>
+    <!-- <video src="@/assets/bg.mp4" class="mark"></video> -->
     <!-- 顶部tabbar栏 -->
     <div class="topbar">
       <div class="title1" @click="changeWall(0)"><router-link to="/wall">留言墙</router-link><span :class="isActive == 0 ? 'active' : ''"></span></div>
