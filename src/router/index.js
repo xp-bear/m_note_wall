@@ -1,27 +1,51 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Vue from "vue";
+import VueRouter from "vue-router";
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
-    component: HomeView
+    //首页
+    path: "/",
+    name: "Index",
+    component: () => import("../views/Index.vue"),
+    redirect: "/wall",
+    children: [
+      {
+        path: "/wall",
+        name: "Wall",
+        component: () => import("../views/Wall.vue"),
+      },
+      {
+        path: "/photo",
+        name: "Photo",
+        component: () => import("../views/Photo.vue"),
+      },
+    ],
   },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
-]
+  // {
+  //   path: "/wall",
+  //   name: "Wall",
+  //   component: () => import("../views/Wall.vue"),
+  // },
+  // {
+  //   path: "/photo",
+  //   name: "Photo",
+  //   component: () => import("../views/Photo.vue"),
+  // },
+
+  // {
+  //   path: "/about",
+  //   name: "about",
+  //   // route level code-splitting
+  //   // this generates a separate chunk (about.[hash].js) for this route
+  //   // which is lazy-loaded when the route is visited.
+  //   component: () => import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+  // },
+];
 
 const router = new VueRouter({
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

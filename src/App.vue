@@ -1,32 +1,37 @@
 <template>
-  <div id="app">
-    <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </nav>
-    <router-view/>
+  <div id="App">
+    <!-- 路由占位符  -->
+    <router-view></router-view>
   </div>
 </template>
 
+<script>
+export default {
+  name: "App",
+  data() {
+    return {};
+  },
+
+  methods: {
+    toWall() {
+      console.log(11);
+    },
+    toPhoto() {
+      console.log(22);
+    },
+  },
+};
+</script>
 <style lang="less">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+@import url("./assets/fonts/icon/iconfont.css"); //引入全局字体图标
+@font-face {
+  font-family: xp;
+  // src: url("@/assets/fonts/two.ttf");
+  src: url("http://cdn.xxoutman.cn/two.ttf");
 }
-
-nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+#App {
+  width: 7.5rem;
+  margin: 0 auto;
+  font-size: 0.32rem;
 }
 </style>
