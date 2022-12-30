@@ -30,6 +30,7 @@ export default {
   src: url("http://cdn.xxoutman.cn/two.ttf");
 }
 #App {
+  position: relative;
   width: 7.5rem;
   margin: 0 auto;
   font-size: 0.32rem;

@@ -82,6 +82,12 @@
         <div class="color-list">
           <div class="color-item" v-for="(item, index) in cardListColor" :style="{ background: item }" :key="item" @click="selectColor(index)" :class="isColor == index ? 'isColorSelect' : ''"></div>
         </div>
+
+        <div class="newcard">
+          <!-- 新建卡片信息。 -->
+          <textarea class="textarea" placeholder="留言..."></textarea>
+          <input type="text">
+        </div>
       </div>
     </van-popup>
   </div>
@@ -210,12 +216,27 @@ export default {
     // 颜色列表。
     .color-list {
       display: flex;
+      margin-bottom: 0.24rem;
       .color-item {
         width: 0.48rem;
         height: 0.48rem;
         background: #fcafa2;
         margin-right: 0.16rem;
         border: 0.02rem solid transparent;
+      }
+    }
+    .newcard {
+      width: 100%;
+      height: 4.8rem;
+      background: rgba(146, 230, 245, 0.3);
+      font-family: xp;
+      margin: 0 auto 0.24rem;
+      padding: 0.4rem;
+      .textarea {
+        width: 100%;
+        height: 80%;
+        background-color: transparent;
+        border: 0;
       }
     }
   }
