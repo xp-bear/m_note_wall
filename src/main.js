@@ -9,7 +9,11 @@ import Button from "vant/lib/button";
 import { Tab, Tabs } from "vant";
 import { Popup } from "vant";
 import { Icon } from "vant";
+import { Pagination } from "vant";
+import { Empty } from "vant";
 
+Vue.use(Empty);
+Vue.use(Pagination);
 Vue.use(Icon);
 Vue.use(Popup);
 Vue.use(Tab);

@@ -15,12 +15,21 @@
 </template>
 
 <script>
+import { signIpApi } from "@/api/index";
 export default {
   name: "Index",
   data() {
     return {
       isActive: 0, //初始状态是留言墙。
     };
+  },
+  mounted() {
+    signIpApi().then((res) => {
+      this.$store.commit("getIp", res.ip);
+    });
+    // setTimeout(() => {
+    //   console.log(this.$store.state.userIp);
+    // }, 300);
   },
   methods: {
     changeWall(value) {

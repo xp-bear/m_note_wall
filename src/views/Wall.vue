@@ -9,23 +9,23 @@
           <div>很多事情值得记录，当然也值得回味。</div>
         </div>
         <!-- 绘制一个卡片。 -->
-        <div class="card" v-for="(item, index) in 5" :key="index" @click="toCardDetail">
+        <div class="card" v-for="(item, index) in notes" :key="item.id" @click="toCardDetail(notes[index])" :style="`background:${cardColor[item.color]}`">
           <!-- 卡片头部分 -->
           <div class="card-title">
-            <span>2022/08/23 17:00</span>
-            <span>留言</span>
+            <span>{{ dateOne(item.moment) }}</span>
+            <span>{{ label[0][[item.label + 1]] }}</span>
           </div>
           <!-- 卡片信息。 -->
           <div class="card-message">
-            <p>是一段暖心的话， 这是一段暖心的话 大萨达撒 大萨达</p>
+            <p>{{ item.message }}</p>
           </div>
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span><i class="iconfont icon-aixin1 isLike"></i>&nbsp;&nbsp;9</span>
-              <span><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;1</span>
+              <span><i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>&nbsp;&nbsp;{{ item.like[0].count }}</span>
+              <span v-show="item.comcount[0].count > 0"><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ item.comcount[0].count }}</span>
             </div>
-            <span>我是宋大人</span>
+            <span>{{ item.name }}</span>
           </div>
         </div>
       </van-tab>
@@ -35,6 +35,21 @@
     <div class="addbtn" @click="addWall">
       <i class="iconfont icon-tianjia"></i>
     </div>
+
+    <!-- 底部分页操作。 -->
+    <van-pagination v-if="this.notes.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="5" @change="changePage">
+      <template #prev-text>
+        <van-icon name="arrow-left" />
+      </template>
+      <template #next-text>
+        <van-icon name="arrow" />
+      </template>
+      <template #page="{ text }">{{ text }}</template>
+    </van-pagination>
+
+    <!-- 空状态。 -->
+    <van-empty v-else image="http://cdn.xxoutman.cn/note2.png" description="还没有留言,快写上第一条吧!" />
+
     <!-- 新建卡片的弹出层 -->
     <van-popup v-model="isAddShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
       <div class="popup">
@@ -82,39 +97,49 @@
           <span>举报</span>
         </div>
         <!-- 卡片细节 -->
-        <div class="card">
+        <div class="card" :style="`background:${cardColor[cardDetail.color]}`">
           <!-- 卡片头部分 -->
           <div class="card-title">
-            <span>2022/08/23 17:00</span>
-            <span>留言</span>
+            <span>{{ dateOne(cardDetail.moment) }}</span>
+            <span>{{ label[0][[cardDetail.label + 1]] }}</span>
           </div>
           <!-- 卡片信息。 -->
           <div class="card-message">
-            <p>是一段暖心的话， 这是一段暖心的话 大萨达撒 大萨达</p>
+            <p>{{ cardDetail.message }}</p>
           </div>
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span><i class="iconfont icon-aixin1 isLike"></i>&nbsp;&nbsp;9</span>
-              <span><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;1</span>
+              <span>
+                <i class="iconfont icon-aixin1" :class="cardDetail.islike && cardDetail.islike[0].count > 0 ? 'isLike' : ''"></i>
+                &nbsp;&nbsp;{{ cardDetail.like && cardDetail.like[0].count }}
+              </span>
+              <span v-show="cardDetail.comcount && cardDetail.comcount[0].count > 0"> <i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ cardDetail.comcount && cardDetail.comcount[0].count }} </span>
             </div>
-            <span>我是宋大人</span>
+            <span>{{ cardDetail.name }}</span>
           </div>
         </div>
         <!-- 评论。 -->
-        <div class="comment">评论 666</div>
+        <div class="comment">评论 {{ cardDetail.comcount && cardDetail.comcount[0].count }}</div>
         <!-- 评论信息。 -->
-        <div class="comment-detail" v-for="item in 5">
-          <div class="avatar"><img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" /></div>
+        <div class="comment-detail" v-for="item in noteMsg" :key="item.id">
+          <div class="avatar" :style="`background:${portrait[item.imgUrl]}`">
+            <!-- <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" /> -->
+          </div>
           <div class="info">
             <div class="msg-title">
-              <div class="name">匿名</div>
-              <span class="time">2022.08.24 14:32</span>
+              <div class="name">{{ item.name }}</div>
+              <span class="time">{{ dateOne(item.moment) }}</span>
             </div>
-            <p class="msg-comment">顾名思义,方便粘贴在书本墙上以及家中办公室等地方,上面可以记录一些备忘录文字,主要就是提示(警示鼓舞)作用,</p>
+            <p class="msg-comment">{{ item.comment }}</p>
           </div>
         </div>
-
+        <span
+          v-show="cardDetail.comcount && cardDetail.comcount[0].count != noteMsg.length && noteMsg.length >= 10"
+          style="display: flex; justify-content: center; color: #646566; font-size: 0.28rem"
+          @click="getMoreComment"
+          >加载更多</span
+        >
         <!-- 发表评论。 -->
         <div class="ipt-msg">
           <input type="text" placeholder="发表评论" />
@@ -126,27 +151,68 @@
 </template>
 
 <script>
-import { label, cardListColor, cardColor } from "@/utils/data";
+import { label, cardListColor, cardColor, portrait } from "@/utils/data";
+import { dateOne } from "@/utils/time_format";
+import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi } from "@/api/index";
 export default {
   name: "Wall",
   data() {
     return {
-      label, //当前的标签
+      label, //当前的标签[[],[]]
+      portrait, //头像颜色数据。
+      isLabelindex: 0, //留言墙标签选择的索引。
       cardListColor, //新建卡片选择颜色列表。
       cardColor, //透明卡片颜色选择列表
       isAddShow: false, //添加留言的弹出层是否显示
       isColor: 0, //当前选中的颜色值列表的索引。
       isLabelSelect: 0, //选择标签的索引值
       isCardShow: false, //点击卡片的弹出层。
+      page: 1, //留言页码。
+      pageSize: 5, //每页多少条留言
+      commentPage: 1,
+      commentSize: 10, //每页评论有多少
+      totalNumber: 0, //总共的留言有多少条
+      notes: [], //留言墙卡片数组。
+      cardDetail: {}, //卡片细节
+      noteMsg: [], //留言评论数据。
     };
   },
   mounted() {
-    console.log(this.$route.path); // 路径地址: /wall
+    // console.log(this.$route.path); // 路径地址: /wall
+    this.getWallData();
+    this.getWallCount();
   },
   methods: {
+    //获取留言墙数据。
+    getWallData() {
+      let data = {
+        page: this.page,
+        pageSize: this.pageSize,
+        type: 0, //代表是留言墙
+        label: this.isLabelindex - 1,
+        userID: this.$store.userIp, //当前登录用户的IP。
+      };
+      findWallPageApi(data).then((res) => {
+        this.notes = res.message;
+      });
+    },
+    //获取留言总条数。
+    getWallCount() {
+      // 查询留言墙或照片墙的总条数。
+      findWallPhotoTotalApi({ type: 0, label: this.isLabelindex - 1 }).then((res) => {
+        this.totalNumber = res.message[0].totalNumber;
+      });
+    },
+
+    dateOne, //时间格式，处理方法。
     // 切换tab栏的方法。
-    toChangeTab(name, title) {
-      console.log(name, title); //1 '留言'
+    toChangeTab(value, title) {
+      console.log(value, title); //1 '留言'
+      this.isLabelindex = value;
+      // 请求分类数据
+      this.page = 1;
+      this.getWallData();
+      this.getWallCount();
     },
     // 打开弹出层
     addWall() {
@@ -169,8 +235,40 @@ export default {
       this.isAddShow = false;
     },
     //点击卡片展示卡片细节。
-    toCardDetail() {
+    toCardDetail(cardValue) {
       this.isCardShow = true;
+      this.cardDetail = cardValue;
+      // console.log(this.cardDetail);
+
+      this.commentPage = 1;
+      // 请求评论数据。
+      let data = {
+        page: this.commentPage,
+        pageSize: this.commentSize,
+        id: this.cardDetail.id,
+      };
+      findCommentPageApi(data).then((res) => {
+        this.noteMsg = res.message;
+        // console.log(this.noteMsg);
+      });
+    },
+    // 加载更多评论。
+    getMoreComment() {
+      this.commentPage++;
+      // 请求评论数据。
+      let data = {
+        page: this.commentPage,
+        pageSize: this.commentSize,
+        id: this.cardDetail.id,
+      };
+      findCommentPageApi(data).then((res) => {
+        this.noteMsg = this.noteMsg.concat(res.message);
+      });
+    },
+    //页码改变函数。
+    changePage() {
+      // console.log(value);
+      this.getWallData();
     },
   },
 };
@@ -259,6 +357,7 @@ export default {
     position: fixed;
     right: 0.6rem;
     bottom: 0.6rem;
+    z-index: 999;
     i {
       color: #fff;
       font-size: 0.48rem;
@@ -405,6 +504,7 @@ export default {
         width: 0.56rem;
         height: 0.56rem;
         margin-right: 0.16rem;
+        border-radius: 50%;
         img {
           border-radius: 50%;
         }
