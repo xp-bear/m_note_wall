@@ -8,7 +8,9 @@ import "vant/lib/index.css";
 import Button from "vant/lib/button";
 import { Tab, Tabs } from "vant";
 import { Popup } from "vant";
+import { Icon } from "vant";
 
+Vue.use(Icon);
 Vue.use(Popup);
 Vue.use(Tab);
 Vue.use(Tabs);

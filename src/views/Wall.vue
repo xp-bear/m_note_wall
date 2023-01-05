@@ -3,51 +3,13 @@
     <!-- tab项目进行切换。 -->
     <van-tabs background="transparent" color="#2b5aed" @click="toChangeTab">
       <van-tab v-for="item in label[0]" :key="item" :title="item">
-        <!-- 留言卡片数据。-->
+        <!-- 留言墙头部-->
         <div class="msg">
           <p>留言墙</p>
           <div>很多事情值得记录，当然也值得回味。</div>
         </div>
         <!-- 绘制一个卡片。 -->
-        <div class="card">
-          <!-- 卡片头部分 -->
-          <div class="card-title">
-            <span>2022/08/23 17:00</span>
-            <span>留言</span>
-          </div>
-          <!-- 卡片信息。 -->
-          <div class="card-message">
-            <p>是一段暖心的话， 这是一段暖心的话 大萨达撒 大萨达</p>
-          </div>
-          <!-- 卡片尾部。 -->
-          <div class="card-footer">
-            <div class="like">
-              <span><i class="iconfont icon-aixin1 isLike"></i>&nbsp;&nbsp;9</span>
-              <span><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;1</span>
-            </div>
-            <span>我是宋大人</span>
-          </div>
-        </div>
-        <div class="card">
-          <!-- 卡片头部分 -->
-          <div class="card-title">
-            <span>2022/08/23 17:00</span>
-            <span>留言</span>
-          </div>
-          <!-- 卡片信息。 -->
-          <div class="card-message">
-            <p>是一段暖心的话， 这是一段暖心的话 大萨达撒 大萨达</p>
-          </div>
-          <!-- 卡片尾部。 -->
-          <div class="card-footer">
-            <div class="like">
-              <span><i class="iconfont icon-aixin1 isLike"></i>&nbsp;&nbsp;9</span>
-              <span><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;1</span>
-            </div>
-            <span>我是宋大人</span>
-          </div>
-        </div>
-        <div class="card">
+        <div class="card" v-for="(item, index) in 5" :key="index" @click="toCardDetail">
           <!-- 卡片头部分 -->
           <div class="card-title">
             <span>2022/08/23 17:00</span>
@@ -73,8 +35,8 @@
     <div class="addbtn" @click="addWall">
       <i class="iconfont icon-tianjia"></i>
     </div>
-    <!-- 弹出层 -->
-    <van-popup v-model="isShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
+    <!-- 新建卡片的弹出层 -->
+    <van-popup v-model="isAddShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
       <div class="popup">
         <!-- 在弹出层里面新建留言。 -->
         <div class="title">写留言</div>
@@ -111,6 +73,55 @@
         </div>
       </div>
     </van-popup>
+
+    <!-- 点击卡片展示细节的弹出层 -->
+    <van-popup v-model="isCardShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left">
+      <div class="card-detail">
+        <div class="title">
+          <span>联系墙主撕掉该便签</span>
+          <span>举报</span>
+        </div>
+        <!-- 卡片细节 -->
+        <div class="card">
+          <!-- 卡片头部分 -->
+          <div class="card-title">
+            <span>2022/08/23 17:00</span>
+            <span>留言</span>
+          </div>
+          <!-- 卡片信息。 -->
+          <div class="card-message">
+            <p>是一段暖心的话， 这是一段暖心的话 大萨达撒 大萨达</p>
+          </div>
+          <!-- 卡片尾部。 -->
+          <div class="card-footer">
+            <div class="like">
+              <span><i class="iconfont icon-aixin1 isLike"></i>&nbsp;&nbsp;9</span>
+              <span><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;1</span>
+            </div>
+            <span>我是宋大人</span>
+          </div>
+        </div>
+        <!-- 评论。 -->
+        <div class="comment">评论 666</div>
+        <!-- 评论信息。 -->
+        <div class="comment-detail" v-for="item in 5">
+          <div class="avatar"><img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" /></div>
+          <div class="info">
+            <div class="msg-title">
+              <div class="name">匿名</div>
+              <span class="time">2022.08.24 14:32</span>
+            </div>
+            <p class="msg-comment">顾名思义,方便粘贴在书本墙上以及家中办公室等地方,上面可以记录一些备忘录文字,主要就是提示(警示鼓舞)作用,</p>
+          </div>
+        </div>
+
+        <!-- 发表评论。 -->
+        <div class="ipt-msg">
+          <input type="text" placeholder="发表评论" />
+          <i class="iconfont icon-fasong"></i>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -123,10 +134,14 @@ export default {
       label, //当前的标签
       cardListColor, //新建卡片选择颜色列表。
       cardColor, //透明卡片颜色选择列表
-      isShow: true, //添加留言的弹出层是否显示
+      isAddShow: false, //添加留言的弹出层是否显示
       isColor: 0, //当前选中的颜色值列表的索引。
       isLabelSelect: 0, //选择标签的索引值
+      isCardShow: false, //点击卡片的弹出层。
     };
+  },
+  mounted() {
+    console.log(this.$route.path); // 路径地址: /wall
   },
   methods: {
     // 切换tab栏的方法。
@@ -135,23 +150,27 @@ export default {
     },
     // 打开弹出层
     addWall() {
-      this.isShow = true;
+      this.isAddShow = true;
     },
-    // 选择颜色值。
+    // 新建卡片选择颜色值。
     selectColor(index) {
       this.isColor = index;
     },
-    //选择标签
+    //新建卡片选择标签
     selectLabel(index) {
       this.isLabelSelect = index;
     },
-    // 丢弃
+    // 丢弃按钮
     giveUp() {
-      this.isShow = false;
+      this.isAddShow = false;
     },
-    // 确定
+    // 确定按钮
     submit() {
-      this.isShow = false;
+      this.isAddShow = false;
+    },
+    //点击卡片展示卡片细节。
+    toCardDetail() {
+      this.isCardShow = true;
     },
   },
 };
@@ -230,7 +249,8 @@ export default {
   .addbtn {
     width: 1.12rem;
     height: 1.12rem;
-    background: #202020;
+    background: #3b73f0;
+
     box-shadow: 0px 0.08rem 0.16rem 0px rgba(0, 0, 0, 0.08);
     border-radius: 0.56rem;
     display: flex;
@@ -346,6 +366,101 @@ export default {
       font-size: 0.24rem;
       color: #949494;
       line-height: 0.36rem;
+    }
+  }
+  //卡片细节弹出层
+  .card-detail {
+    .title {
+      display: flex;
+      justify-content: end;
+      margin-top: 0.34rem;
+      font-size: 0.32rem;
+      margin-bottom: 0.34rem;
+      font-family: xp;
+      & > span:nth-child(1) {
+        color: #3b73f0;
+        margin-right: 0.6rem;
+      }
+      & > span:nth-child(2) {
+        color: #f67770;
+        margin-right: 0.4rem;
+      }
+    }
+    .comment {
+      width: 7rem;
+      margin: 0 auto;
+      font-size: 0.28rem;
+      color: #202020;
+      font-weight: 600;
+      margin-bottom: 0.24rem;
+    }
+    .comment-detail {
+      display: flex;
+      justify-content: space-between;
+      width: 7rem;
+      margin: 0 auto;
+      margin-bottom: 0.3rem;
+
+      .avatar {
+        width: 0.56rem;
+        height: 0.56rem;
+        margin-right: 0.16rem;
+        img {
+          border-radius: 50%;
+        }
+      }
+      .info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        .msg-title {
+          display: flex;
+          align-items: center;
+          .name {
+            font-size: 0.28rem;
+            color: #202020;
+            font-weight: 600;
+            margin-right: 0.08rem;
+          }
+          .time {
+            font-size: 0.24rem;
+            color: #949494;
+            font-weight: 400;
+          }
+        }
+        .msg-comment {
+          font-size: 0.28rem;
+          color: #202020;
+          line-height: 0.44rem;
+          font-weight: 400;
+          font-family: xp;
+          margin-top: 0.1rem;
+        }
+      }
+    }
+    .ipt-msg {
+      width: 7rem;
+      margin: 0 auto;
+      padding-bottom: 0.2rem;
+      display: flex;
+      align-items: center;
+      font-family: xp;
+      input {
+        width: 6.2rem;
+        height: 0.8rem;
+        background: #f4f4f4;
+        border: 0;
+        padding-left: 0.24rem;
+        font-size: 0.28rem;
+        &::placeholder {
+          color: rgba(30, 32, 37, 0.5);
+        }
+      }
+      i {
+        font-size: 0.6rem;
+        margin-left: 0.1rem;
+        color: #3b73f0;
+      }
     }
   }
 }

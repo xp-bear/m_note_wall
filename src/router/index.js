@@ -24,7 +24,7 @@ const routes = [
     ],
   },
   // {
-  //   path: "/wall",
+  //   path: "/wall?id=0",
   //   name: "Wall",
   //   component: () => import("../views/Wall.vue"),
   // },
