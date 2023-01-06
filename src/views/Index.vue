@@ -23,13 +23,18 @@ export default {
       isActive: 0, //初始状态是留言墙。
     };
   },
-  mounted() {
+  created() {
     signIpApi().then((res) => {
       this.$store.commit("getIp", res.ip);
     });
     // setTimeout(() => {
     //   console.log(this.$store.state.userIp);
     // }, 300);
+
+    // console.log(this.$route.path); // 路径地址: /wall
+    if (this.$route.path == "/photo") {
+      this.isActive = 1;
+    }
   },
   methods: {
     changeWall(value) {

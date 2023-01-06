@@ -1,5 +1,5 @@
 <template>
-  <div class="">photo</div>
+  <div class="">照片墙正在开发中，别猴急!</div>
 </template>
 
 <script>

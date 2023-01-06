@@ -22,7 +22,7 @@
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span><i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>&nbsp;&nbsp;{{ item.like[0].count }}</span>
+              <span @click.stop="toLike(index)"><i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>&nbsp;&nbsp;{{ item.like[0].count }}</span>
               <span v-show="item.comcount[0].count > 0"><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ item.comcount[0].count }}</span>
             </div>
             <span>{{ item.name }}</span>
@@ -62,14 +62,14 @@
         <!-- 新建卡片 -->
         <div class="newcard" :style="{ background: cardColor[isColor] }">
           <!-- 新建卡片信息。 -->
-          <textarea class="textarea" placeholder="留言..."></textarea>
-          <input type="text" class="signature" placeholder="签名..." />
+          <textarea class="textarea" placeholder="留言..." v-model="message"></textarea>
+          <input type="text" class="signature" placeholder="签名..." v-model="name" />
         </div>
 
         <!-- 选择标签 -->
         <div class="select-label">选择标签</div>
         <div class="labels">
-          <span v-for="(item, index) in label[0]" :key="item" @click="selectLabel(index)" :class="isLabelSelect == index ? 'isLabelSelect' : ''">{{ item }}</span>
+          <span v-for="(item, index) in label[1]" :key="item" @click="selectLabel(index)" :class="isLabelSelect == index ? 'isLabelSelect' : ''">{{ item }}</span>
         </div>
         <!-- 免责声明。 -->
         <div class="select-label liability">免责声明</div>
@@ -110,7 +110,7 @@
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span>
+              <span @click="toLikeDetail">
                 <i class="iconfont icon-aixin1" :class="cardDetail.islike && cardDetail.islike[0].count > 0 ? 'isLike' : ''"></i>
                 &nbsp;&nbsp;{{ cardDetail.like && cardDetail.like[0].count }}
               </span>
@@ -131,19 +131,19 @@
               <div class="name">{{ item.name }}</div>
               <span class="time">{{ dateOne(item.moment) }}</span>
             </div>
-            <p class="msg-comment">{{ item.comment }}</p>
+            <p class="msg-comment" style="white-space: pre-wrap">{{ item.comment }}</p>
           </div>
         </div>
         <span
           v-show="cardDetail.comcount && cardDetail.comcount[0].count != noteMsg.length && noteMsg.length >= 10"
-          style="display: flex; justify-content: center; color: #646566; font-size: 0.28rem"
+          style="display: flex; justify-content: center; color: #646566; font-size: 0.28rem; margin-bottom: 0.3rem"
           @click="getMoreComment"
           >加载更多</span
         >
         <!-- 发表评论。 -->
         <div class="ipt-msg">
-          <input type="text" placeholder="发表评论" />
-          <i class="iconfont icon-fasong"></i>
+          <textarea type="text" placeholder="发表评论" v-model="iptMsg"></textarea>
+          <i class="iconfont icon-fasong" @click="sendMsg"></i>
         </div>
       </div>
     </van-popup>
@@ -153,7 +153,7 @@
 <script>
 import { label, cardListColor, cardColor, portrait } from "@/utils/data";
 import { dateOne } from "@/utils/time_format";
-import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi } from "@/api/index";
+import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi } from "@/api/index";
 export default {
   name: "Wall",
   data() {
@@ -175,11 +175,17 @@ export default {
       notes: [], //留言墙卡片数组。
       cardDetail: {}, //卡片细节
       noteMsg: [], //留言评论数据。
+      iptMsg: "", //评论框评论信息。
+      message: "", //添加卡片时留言信息。
+      name: "", //添加卡片的签名信息。
     };
   },
+  computed: {},
   mounted() {
-    // console.log(this.$route.path); // 路径地址: /wall
-    this.getWallData();
+
+    setTimeout(() => {
+      this.getWallData();
+    }, 100);
     this.getWallCount();
   },
   methods: {
@@ -190,7 +196,7 @@ export default {
         pageSize: this.pageSize,
         type: 0, //代表是留言墙
         label: this.isLabelindex - 1,
-        userID: this.$store.userIp, //当前登录用户的IP。
+        userID: this.$store.state.userIp, //当前登录用户的IP。
       };
       findWallPageApi(data).then((res) => {
         this.notes = res.message;
@@ -225,6 +231,7 @@ export default {
     //新建卡片选择标签
     selectLabel(index) {
       this.isLabelSelect = index;
+      console.log(this.isLabelSelect);
     },
     // 丢弃按钮
     giveUp() {
@@ -233,12 +240,52 @@ export default {
     // 确定按钮
     submit() {
       this.isAddShow = false;
+      // 添加留言数据。  // 创建提交给后端的数据项
+      if (this.name == "") {
+        this.name = "匿名";
+      }
+      let data = {
+        type: 0, //留言
+        message: this.message,
+        name: this.name,
+        userId: this.$store.state.userIp,
+        moment: new Date(),
+        label: this.isLabelSelect, //选择到对应标签的索引
+        color: this.isColor, //留言背景颜色索引
+        imgUrl: "", //留言没有图片路径。
+      };
+      // 新建留言数据
+      insertWallApi(data).then((res) => {
+        // 自己造一张卡片
+        let cradD = {
+          type: 0,
+          message: this.message,
+          name: this.name,
+          userId: this.$store.state.userIp,
+          moment: new Date(),
+          label: this.isLabelSelect, //选择到对应标签的索引
+          color: this.isColor, //留言背景颜色索引
+          imgUrl: "",
+          id: res.message.insertId,
+          islike: [{ count: 0 }],
+          like: [{ count: 0 }],
+          comcount: [{ count: 0 }],
+          report: [{ count: 0 }],
+          revoke: [{ count: 0 }],
+        };
+        this.notes.unshift(cradD);
+        this.isLabelindex = 0; //让卡片重新回到全部标签。
+
+        // 清空卡片数据。
+        this.message = "";
+        this.name = "";
+      });
     },
     //点击卡片展示卡片细节。
     toCardDetail(cardValue) {
       this.isCardShow = true;
       this.cardDetail = cardValue;
-      // console.log(this.cardDetail);
+      console.log(this.cardDetail);
 
       this.commentPage = 1;
       // 请求评论数据。
@@ -269,6 +316,82 @@ export default {
     changePage() {
       // console.log(value);
       this.getWallData();
+    },
+    //点击喜欢按钮。
+    toLike(index) {
+      // 判断是否点击过
+      let likeData = {
+        wid: this.notes[index].id, //当前卡片的id
+        uid: this.$store.state.userIp, //当前登录的ip用户 150.12.16.18
+      };
+      // 判断当前ip地址有没有点击过爱心
+      likeCountApi(likeData).then((res) => {
+        console.log("是否点击爱心。", res.message[0].count);
+        if (res.message[0].count == 0) {
+          let data = {
+            wallId: this.notes[index].id, //当前卡片的id
+            userId: this.$store.state.userIp, //当前登录的ip用户
+            type: 0, //喜欢
+            moment: new Date(), //时间
+          };
+          insertFeedBackApi(data).then((res) => {
+            this.notes[index].like[0].count++;
+            this.notes[index].islike[0].count = 1;
+          });
+        } else {
+          this.notes[index].islike[0].count = 1;
+        }
+      });
+    },
+    //点击爱心详细详细留言。
+    toLikeDetail() {
+      // 判断是否点击过
+      let likeData = {
+        wid: this.cardDetail.id, //当前卡片的id
+        uid: this.$store.state.userIp, //当前登录的ip用户 150.12.16.18
+      };
+      // 判断当前ip地址有没有点击过爱心
+      likeCountApi(likeData).then((res) => {
+        console.log("是否点击爱心。", res.message[0].count);
+        if (res.message[0].count == 0) {
+          let data = {
+            wallId: this.cardDetail.id, //当前卡片的id
+            userId: this.$store.state.userIp, //当前登录的ip用户
+            type: 0, //喜欢
+            moment: new Date(), //时间
+          };
+          insertFeedBackApi(data).then((res) => {
+            this.cardDetail.like[0].count++;
+            this.cardDetail.islike[0].count = 1;
+          });
+        } else {
+          this.cardDetail.islike[0].count = 1;
+        }
+      });
+    },
+    //发送评论信息。
+    sendMsg() {
+      console.log(this.iptMsg);
+
+      //如果有用户就用头像，没有就用随机头像
+      let img = Math.floor(Math.random() * 14);
+      let data = {
+        wallId: this.cardDetail.id,
+        userId: this.$store.state.userIp,
+        imgUrl: img,
+        comment: this.iptMsg, //评论
+        name: "匿名",
+        moment: new Date(),
+      };
+      // console.log(data);
+      insertCommentApi(data).then((res) => {
+        this.noteMsg.unshift(data);
+        this.cardDetail.comcount[0].count++;
+      });
+      // 清空评论框
+      this.iptMsg = "";
+      // this.name = "";
+      // this.$message({ type: "success", message: "发送成功!" });
     },
   },
 };
@@ -545,13 +668,15 @@ export default {
       display: flex;
       align-items: center;
       font-family: xp;
-      input {
+      textarea {
         width: 6.2rem;
         height: 0.8rem;
         background: #f4f4f4;
         border: 0;
         padding-left: 0.24rem;
         font-size: 0.28rem;
+        line-height: 0.8rem;
+        resize: none;
         &::placeholder {
           color: rgba(30, 32, 37, 0.5);
         }
