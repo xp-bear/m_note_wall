@@ -37,7 +37,7 @@
     </div>
 
     <!-- 底部分页操作。 -->
-    <van-pagination v-if="this.notes.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="5" @change="changePage">
+    <van-pagination style="margin-bottom: 0.24rem" v-if="this.notes.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="5" @change="changePage">
       <template #prev-text>
         <van-icon name="arrow-left" />
       </template>
@@ -48,7 +48,7 @@
     </van-pagination>
 
     <!-- 空状态。 -->
-    <van-empty v-else image="http://cdn.xxoutman.cn/note2.png" description="还没有留言,快写上第一条吧!" />
+    <van-empty v-else image="http://cdn.xxoutman.cn/note2.png" description="还没有留言,快写上第一条吧！" />
 
     <!-- 新建卡片的弹出层 -->
     <van-popup v-model="isAddShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
@@ -93,8 +93,8 @@
     <van-popup v-model="isCardShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left">
       <div class="card-detail">
         <div class="title">
-          <span>联系墙主撕掉该便签</span>
           <span>举报</span>
+          <span>联系墙主撕掉该便签</span>
         </div>
         <!-- 卡片细节 -->
         <div class="card" :style="`background:${cardColor[cardDetail.color]}`">
@@ -182,10 +182,9 @@ export default {
   },
   computed: {},
   mounted() {
-
     setTimeout(() => {
       this.getWallData();
-    }, 100);
+    }, 50);
     this.getWallCount();
   },
   methods: {
@@ -399,6 +398,14 @@ export default {
 
 <style lang="less" scoped>
 .Wall {
+  /deep/.van-empty__image {
+    width: 2rem;
+    height: 2rem;
+    img {
+      text-align: center;
+      line-height: 2rem;
+    }
+  }
   /deep/.van-popup__close-icon {
     color: #5b5b5b;
   }
@@ -442,7 +449,7 @@ export default {
     .card-title {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 0.28rem;
       color: #949494;
     }
     .card-message {
@@ -594,7 +601,7 @@ export default {
   .card-detail {
     .title {
       display: flex;
-      justify-content: end;
+      flex-direction: row-reverse;
       margin-top: 0.34rem;
       font-size: 0.32rem;
       margin-bottom: 0.34rem;
