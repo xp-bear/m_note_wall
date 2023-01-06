@@ -46,9 +46,10 @@
       </template>
       <template #page="{ text }">{{ text }}</template>
     </van-pagination>
-
+    <!-- 加载状态 -->
+    <van-loading v-if="isLoading == -1" vertical color="#7e7e7e" type="spinner" size="1rem">疯狂加载中...</van-loading>
     <!-- 空状态。 -->
-    <van-empty v-else image="http://cdn.xxoutman.cn/note2.png" description="还没有留言,快写上第一条吧！" />
+    <van-empty v-if="this.notes.length == 0 && isLoading == 1" image="http://cdn.xxoutman.cn/note2.png" description="还没有留言,快写上第一条吧！" />
 
     <!-- 新建卡片的弹出层 -->
     <van-popup v-model="isAddShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
@@ -178,15 +179,17 @@ export default {
       iptMsg: "", //评论框评论信息。
       message: "", //添加卡片时留言信息。
       name: "", //添加卡片的签名信息。
+      isLoading: -1, //加载状态
     };
   },
   computed: {},
   mounted() {
     setTimeout(() => {
       this.getWallData();
-    }, 50);
+    }, 150);
     this.getWallCount();
   },
+
   methods: {
     //获取留言墙数据。
     getWallData() {
@@ -199,6 +202,9 @@ export default {
       };
       findWallPageApi(data).then((res) => {
         this.notes = res.message;
+        if (this.notes.length >= 0) {
+          this.isLoading = 1;
+        }
       });
     },
     //获取留言总条数。
@@ -235,6 +241,11 @@ export default {
     // 丢弃按钮
     giveUp() {
       this.isAddShow = false;
+      // 清空卡片数据。
+      this.message = "";
+      this.name = "";
+      this.isColor = 0;
+      this.isLabelSelect = 0;
     },
     // 确定按钮
     submit() {
@@ -278,6 +289,8 @@ export default {
         // 清空卡片数据。
         this.message = "";
         this.name = "";
+        this.isColor = 0;
+        this.isLabelSelect = 0;
       });
     },
     //点击卡片展示卡片细节。
@@ -398,6 +411,9 @@ export default {
 
 <style lang="less" scoped>
 .Wall {
+  /deep/.van-loading--vertical {
+    margin-top: 3rem;
+  }
   /deep/.van-empty__image {
     width: 2rem;
     height: 2rem;

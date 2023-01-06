@@ -11,7 +11,9 @@ import { Popup } from "vant";
 import { Icon } from "vant";
 import { Pagination } from "vant";
 import { Empty } from "vant";
+import { Loading } from "vant";
 
+Vue.use(Loading);
 Vue.use(Empty);
 Vue.use(Pagination);
 Vue.use(Icon);
