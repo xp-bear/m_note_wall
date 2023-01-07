@@ -154,7 +154,7 @@ export default {
   name: "Photo",
   data() {
     return {
-      isAddShow: true, //点击添加按钮展示。
+      isAddShow: false, //点击添加按钮展示。
       isPhotoShow: false, //照片详细页面弹出层。
       label, //照片墙tab栏标签。
       isLabelSelect: 0, //新建照片标签的选择。
@@ -246,10 +246,15 @@ export default {
         display: flex;
         align-items: center;
         justify-content: space-evenly;
+        font-family: "xp";
         color: #ccc;
         .top-message {
           display: flex;
           align-items: center;
+          font-size: 0.32rem;
+          i {
+            margin-right: 0.08rem;
+          }
         }
       }
     }
