@@ -22,8 +22,14 @@
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span @click.stop="toLike(index)"><i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>&nbsp;&nbsp;{{ item.like[0].count }}</span>
-              <span v-show="item.comcount[0].count > 0"><i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ item.comcount[0].count }}</span>
+              <span @click.stop="toLike(index)" class="b-msg">
+                <i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>
+                <span>{{ item.like[0].count }}</span>
+              </span>
+              <span v-show="item.comcount[0].count > 0" class="b-msg">
+                <i class="iconfont icon-liuyan"></i>
+                <span>{{ item.comcount[0].count }}</span>
+              </span>
             </div>
             <span>{{ item.name }}</span>
           </div>
@@ -111,11 +117,14 @@
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span @click="toLikeDetail">
+              <span @click="toLikeDetail" class="b-msg">
                 <i class="iconfont icon-aixin1" :class="cardDetail.islike && cardDetail.islike[0].count > 0 ? 'isLike' : ''"></i>
-                &nbsp;&nbsp;{{ cardDetail.like && cardDetail.like[0].count }}
+                <span>{{ cardDetail.like && cardDetail.like[0].count }}</span>
               </span>
-              <span v-show="cardDetail.comcount && cardDetail.comcount[0].count > 0"> <i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ cardDetail.comcount && cardDetail.comcount[0].count }} </span>
+              <span v-show="cardDetail.comcount && cardDetail.comcount[0].count > 0" class="b-msg">
+                <i class="iconfont icon-liuyan"></i>
+                <span> {{ cardDetail.comcount && cardDetail.comcount[0].count }} </span>
+              </span>
             </div>
             <span>{{ cardDetail.name }}</span>
           </div>
@@ -221,6 +230,8 @@ export default {
       console.log(value, title); //1 '留言'
       this.isLabelindex = value;
       // 请求分类数据
+      this.notes = [];
+      this.isLoading = -1;
       this.page = 1;
       this.getWallData();
       this.getWallCount();
@@ -482,9 +493,19 @@ export default {
       display: flex;
       justify-content: space-between;
       .like {
-        span {
-          margin-right: 0.2rem;
+        display: flex;
+        align-items: center;
+
+        .b-msg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           color: #7e7e7e;
+          margin-right: 0.2rem;
+          vertical-align: middle;
+          i {
+            margin-right: 0.08rem;
+          }
         }
       }
     }
@@ -519,7 +540,7 @@ export default {
       font-size: 0.32rem;
       color: #202020;
       font-weight: 600;
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.34rem;
     }
     // 颜色列表。
     .color-list {

@@ -34,6 +34,15 @@ export default {
     // console.log(this.$route.path); // 路径地址: /wall
     if (this.$route.path == "/photo") {
       this.isActive = 1;
+    } else if (this.$route.path == "/wall") {
+      this.isActive = 0;
+    }
+  },
+  updated() {
+    if (this.$route.path == "/photo") {
+      this.isActive = 1;
+    } else if (this.$route.path == "/wall") {
+      this.isActive = 0;
     }
   },
   methods: {
