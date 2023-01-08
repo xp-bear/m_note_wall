@@ -100,7 +100,8 @@
     <van-popup v-model="isCardShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left">
       <div class="card-detail">
         <div class="title">
-          <span>举报</span>
+          <span v-show="cardDetail.userId != this.$store.state.userIp">举报</span>
+          <span v-show="cardDetail.userId == this.$store.state.userIp" @click="toDeleteWall(cardDetail.id)">删除留言</span>
           <span>联系墙主撕掉该便签</span>
         </div>
         <!-- 卡片细节 -->
@@ -163,7 +164,7 @@
 <script>
 import { label, cardListColor, cardColor, portrait } from "@/utils/data";
 import { dateOne } from "@/utils/time_format";
-import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi } from "@/api/index";
+import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
 export default {
   name: "Wall",
   data() {
@@ -260,11 +261,19 @@ export default {
     },
     // 确定按钮
     submit() {
-      this.isAddShow = false;
+      if (this.message.length <= 0) {
+        this.$toast({
+          message: "留言数据为空",
+          icon: "http://cdn.xxoutman.cn/m_error.png",
+        });
+        return;
+      }
       // 添加留言数据。  // 创建提交给后端的数据项
       if (this.name == "") {
         this.name = "匿名";
       }
+      this.isAddShow = false;
+
       let data = {
         type: 0, //留言
         message: this.message,
@@ -302,10 +311,15 @@ export default {
         this.name = "";
         this.isColor = 0;
         this.isLabelSelect = 0;
+        this.$toast({
+          message: "留言添加成功",
+          icon: "http://cdn.xxoutman.cn/m_success.png",
+        });
       });
     },
     //点击卡片展示卡片细节。
     toCardDetail(cardValue) {
+      // console.log("添加留言的ID。", cardValue.userId, "浏览用户的IP。", this.$store.state.userIp);
       this.isCardShow = true;
       this.cardDetail = cardValue;
       console.log(this.cardDetail);
@@ -337,7 +351,9 @@ export default {
     },
     //页码改变函数。
     changePage() {
-      // console.log(value);
+      this.notes = [];
+      this.isLoading = -1;
+      document.documentElement.scrollTop = 0;
       this.getWallData();
     },
     //点击喜欢按钮。
@@ -415,6 +431,21 @@ export default {
       this.iptMsg = "";
       // this.name = "";
       // this.$message({ type: "success", message: "发送成功!" });
+    },
+    //删除留言
+    toDeleteWall(id) {
+      let data = {
+        id,
+      };
+      deleteWallApi(data).then((res) => {
+        // console.log(res);
+        this.$toast({
+          message: "留言删除成功",
+          icon: "http://cdn.xxoutman.cn/m_success.png",
+        });
+        this.getWallData();
+        this.isCardShow = false;
+      });
     },
   },
 };
@@ -644,12 +675,16 @@ export default {
       margin-bottom: 0.34rem;
       font-family: xp;
       & > span:nth-child(1) {
-        color: #3b73f0;
-        margin-right: 0.6rem;
+        color: #f67770;
+        margin-right: 0.4rem;
       }
       & > span:nth-child(2) {
         color: #f67770;
         margin-right: 0.4rem;
+      }
+      & > span:nth-child(3) {
+        color: #3b73f0;
+        margin-right: 0.6rem;
       }
     }
     .comment {

@@ -12,7 +12,9 @@ import { Icon } from "vant";
 import { Pagination } from "vant";
 import { Empty } from "vant";
 import { Loading } from "vant";
+import { Toast } from "vant";
 
+Vue.use(Toast);
 Vue.use(Loading);
 Vue.use(Empty);
 Vue.use(Pagination);
