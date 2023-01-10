@@ -11,7 +11,7 @@
         <!-- 绘制照片。 -->
         <div class="photo-card">
           <div class="photo-item" v-for="(item, index) in photoArr" :key="item.id" @click="changePhotoShow(index)">
-            <video v-if="item.imgUrl.includes('.mp4' || '.wmv' || '.avi' || '.MOV')" style="width: 100%" :src="item.imgUrl"></video>
+            <video preload="metadata" v-if="item.imgUrl.includes('.mp4' || '.wmv' || '.avi' || '.MOV')" style="width: 100%" :src="item.imgUrl + '#t=0.1'"></video>
             <img v-else :src="item.imgUrl" alt="http://cdn.xxoutman.cn/no_img.png" />
 
             <div class="message">
