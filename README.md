@@ -6,6 +6,7 @@
 <img src="http://cdn.xxoutman.cn/m_wall1.png">
 <img src="http://cdn.xxoutman.cn/m_wall2.png">
 </div>
+
 ## 使用的技术:
 
 - vue3

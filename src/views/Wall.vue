@@ -1,7 +1,7 @@
 <template>
   <div class="Wall">
     <!-- tab项目进行切换。 -->
-    <van-tabs background="transparent" color="#2b5aed" @click="toChangeTab">
+    <van-tabs v-model="isLabelindex" background="transparent" color="#2b5aed" @click="toChangeTab" @change="toChangeTab">
       <van-tab v-for="item in label[0]" :key="item" :title="item">
         <!-- 留言墙头部-->
         <div class="msg">
@@ -267,6 +267,7 @@ export default {
         this.$toast({
           message: "留言数据为空",
           icon: "http://cdn.xxoutman.cn/m_error.png",
+          duration: 1500,
         });
         return;
       }
@@ -413,6 +414,14 @@ export default {
     //发送评论信息。
     sendMsg() {
       console.log(this.iptMsg);
+      if (this.iptMsg.length <= 0) {
+        this.$toast({
+          message: "评论数据为空",
+          icon: "http://cdn.xxoutman.cn/m_error.png",
+          duration: 1000,
+        });
+        return;
+      }
 
       //如果有用户就用头像，没有就用随机头像
       let img = Math.floor(Math.random() * 14);

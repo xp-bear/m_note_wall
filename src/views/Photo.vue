@@ -1,7 +1,7 @@
 <template>
   <div class="Photo">
     <!-- tab项目进行切换。 -->
-    <van-tabs background="transparent" color="#2b5aed" @click="toChangeTab">
+    <van-tabs v-model="isLabelindex" background="transparent" color="#2b5aed" @click="toChangeTab" @change="toChangeTab">
       <van-tab v-for="item in label[2]" :key="item" :title="item">
         <!-- 照片墙头部 -->
         <div class="msg">
@@ -15,8 +15,8 @@
             <img v-else :src="item.imgUrl" alt="http://cdn.xxoutman.cn/no_img.png" />
 
             <div class="message">
-              <div class="top-message" @click.stop="toLike(index)">
-                <i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>
+              <div class="top-message">
+                <i class="iconfont icon-aixin1" @click.stop="toLike(index)" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>
                 &nbsp;
                 <span>{{ item.like[0].count }}</span>
               </div>
@@ -144,9 +144,9 @@
           </div>
         </div>
         <!-- 评论。 -->
-        <div class="comment">评论 6</div>
+        <div class="comment">评论 {{ photoObj.comcount ? photoObj.comcount[0].count : "" }}</div>
         <!-- 评论信息。 -->
-        <div class="comment-detail">
+        <!-- <div class="comment-detail">
           <div class="avatar">
             <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" />
           </div>
@@ -157,7 +157,7 @@
             </div>
             <p class="msg-comment" style="white-space: pre-wrap">哈哈哈</p>
           </div>
-        </div>
+        </div> -->
         <!-- <span class="more">加载更多</span> -->
         <!-- 发表评论。 -->
         <div class="ipt-msg">
@@ -174,7 +174,7 @@ import { label, cardListColor, cardColor, portrait } from "@/utils/data";
 import { getObjectURL } from "@/utils/upload";
 import { dateOne } from "@/utils/time_format";
 // import { profileApi, insertWallApi, findWallPageApi, findWallPhotoTotalApi } from "@/api/index";
-import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
+import { profileApi, findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
 
 export default {
   name: "Photo",
@@ -226,7 +226,7 @@ export default {
       // 查询留言墙或照片墙的总条数。
       findWallPhotoTotalApi({ type: 1, label: this.isLabelindex - 1 }).then((res) => {
         this.totalNumber = res.message[0].totalNumber;
-        console.log("每页总数:", this.totalNumber);
+        // console.log("每页总数:", this.totalNumber);
       });
     },
     // 切换tab栏的方法。
@@ -247,6 +247,7 @@ export default {
     changePhotoShow(index) {
       this.photoObj = this.photoArr[index];
       this.isPhotoShow = true;
+      console.log(this.photoObj);
     },
     //新建卡片选择标签
     selectLabel(index) {
@@ -283,41 +284,58 @@ export default {
         color: -1, //留言背景颜色索引
         imgUrl: this.url,
       };
+      console.log(data);
       let file = document.getElementById("file");
 
-      // if (file.files.length > 0) {
-      //   let fromData = new FormData();
-      //   fromData.append("file", file.files[0]);
-      //   // 提交后端
-      //   profileApi(fromData).then((res) => {
-      //     this.url = res.imgUrl;
-      //     // -----------
-      //     data.imgUrl = this.url;
-      //     insertWallApi(data).then((res) => {
-      //       // 自己造一张卡片
-      //       let cradD = {
-      //         type: 1,
-      //         message: this.photoMsg,
-      //         name: this.photoName,
-      //         userId: this.$store.state.userIp,
-      //         moment: new Date(),
-      //         label: this.isLabelSelect, //选择到对应标签的索引
-      //         color: -1, //留言背景颜色索引
-      //         imgUrl: this.url, //图片地址
-      //         id: res.message.insertId,
-      //         islike: [{ count: 0 }],
-      //         like: [{ count: 0 }],
-      //         comcount: [{ count: 0 }],
-      //         report: [{ count: 0 }],
-      //         revoke: [{ count: 0 }],
-      //       };
+      if (file.files.length > 0) {
+        let fromData = new FormData();
+        fromData.append("file", file.files[0]);
+        // 提交后端
+        profileApi(fromData).then((res) => {
+          this.url = res.imgUrl;
+          // -----------
+          data.imgUrl = this.url;
+          insertWallApi(data).then((res) => {
+            // 自己造一张卡片
+            let cradD = {
+              type: 1,
+              message: this.photoMsg,
+              name: this.photoName,
+              userId: this.$store.state.userIp,
+              moment: new Date(),
+              label: this.isLabelSelect, //选择到对应标签的索引
+              color: -1, //留言背景颜色索引
+              imgUrl: this.url, //图片地址
+              id: res.message.insertId,
+              islike: [{ count: 0 }],
+              like: [{ count: 0 }],
+              comcount: [{ count: 0 }],
+              report: [{ count: 0 }],
+              revoke: [{ count: 0 }],
+            };
 
-      //       this.photoName = "";
-      //       this.photoMsg = "";
-      //       this.url = "";
-      //     });
-      //   });
-      // }
+            this.photoArr.unshift(cradD);
+            this.isLabelSelect = 0; //让卡片重新回到全部标签。
+            this.isLabelindex = 0; //让tab栏回到全部
+
+            this.photoName = "";
+            this.photoMsg = "";
+            this.url = "";
+          });
+        });
+      } else {
+        this.$toast({
+          message: "照片还未上传",
+          icon: "http://cdn.xxoutman.cn/m_error.png",
+          duration: 1000,
+        });
+        return;
+      }
+      this.$toast({
+        message: "照片上传成功",
+        icon: "http://cdn.xxoutman.cn/m_success.png",
+        duration: 1000,
+      });
       this.isAddShow = false;
     },
     // 放弃按钮
@@ -395,6 +413,10 @@ export default {
 
 <style lang="less" scoped>
 .Photo {
+  /deep/.van-loading--vertical {
+    margin-top: 3rem;
+  }
+  // -------------------------------
   // 爱心选中样式。
   .isLike {
     color: #f67770;
@@ -502,6 +524,8 @@ export default {
         color: #949494;
       }
       .card-message {
+        position: relative;
+        z-index: -1;
         height: 2.8rem;
         margin-top: 0.38rem;
         font-size: 0.32rem;
