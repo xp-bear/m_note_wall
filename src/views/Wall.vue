@@ -43,12 +43,14 @@
     </div>
 
     <!-- 底部分页操作。 -->
-    <van-pagination style="margin-bottom: 0.24rem" v-if="this.notes.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="5" @change="changePage">
+    <van-pagination v-if="this.notes.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="5" @change="changePage">
       <template #prev-text>
-        <van-icon name="arrow-left" />
+        <!-- <van-icon name="arrow-left" /> -->
+        <i class="iconfont icon-zuojiantou1" style="font-size: 0.64rem"></i>
       </template>
       <template #next-text>
-        <van-icon name="arrow" />
+        <!-- <van-icon name="arrow" /> -->
+        <i class="iconfont icon-youjiantou1" style="font-size: 0.64rem"></i>
       </template>
       <template #page="{ text }">{{ text }}</template>
     </van-pagination>

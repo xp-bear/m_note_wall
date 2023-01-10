@@ -10,18 +10,20 @@
         </div>
         <!-- 绘制照片。 -->
         <div class="photo-card">
-          <div class="photo-item" @click="changePhotoShow">
-            <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" />
+          <div class="photo-item" v-for="(item, index) in photoArr" :key="item.id" @click="changePhotoShow(index)">
+            <video v-if="item.imgUrl.includes('.mp4' || '.wmv' || '.avi' || '.MOV')" style="width: 100%" :src="item.imgUrl"></video>
+            <img v-else :src="item.imgUrl" alt="http://cdn.xxoutman.cn/no_img.png" />
+
             <div class="message">
-              <div class="top-message">
-                <i class="iconfont icon-aixin1 isLike"></i>
+              <div class="top-message" @click.stop="toLike(index)">
+                <i class="iconfont icon-aixin1" :class="item.islike[0].count > 0 ? 'isLike' : ''"></i>
                 &nbsp;
-                <span>1</span>
+                <span>{{ item.like[0].count }}</span>
               </div>
               <div class="top-message">
                 <i class="iconfont icon-liuyan"></i>
                 &nbsp;
-                <span>2</span>
+                <span>{{ item.comcount[0].count }}</span>
               </div>
             </div>
           </div>
@@ -34,6 +36,24 @@
       <i class="iconfont icon-tianjia"></i>
     </div>
 
+    <!-- 分页插件 -->
+    <van-pagination v-if="this.photoArr.length > 0" v-model="page" :items-per-page="pageSize" :total-items="totalNumber" :show-page-size="10" @change="changePage">
+      <template #prev-text>
+        <!-- <van-icon class-prefix="" name="" /> -->
+        <i class="iconfont icon-zuojiantou1" style="font-size: 0.64rem"></i>
+      </template>
+      <template #next-text>
+        <!-- <van-icon name="arrow" /> -->
+        <i class="iconfont icon-youjiantou1" style="font-size: 0.64rem"></i>
+      </template>
+      <template #page="{ text }">{{ text }}</template>
+    </van-pagination>
+
+    <!-- 加载状态 -->
+    <van-loading v-if="isLoading == -1" vertical color="#7e7e7e" type="spinner" size="1rem">疯狂加载中...</van-loading>
+    <!-- 空状态。 -->
+    <van-empty v-if="this.photoArr.length == 0 && isLoading == 1" image="http://cdn.xxoutman.cn/photo2.png" description="还没有照片,快贴上第一张吧！" />
+
     <!-- 新建卡片的弹出层 -->
     <van-popup v-model="isAddShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon-position="top-right">
       <div class="popup">
@@ -41,7 +61,7 @@
         <div class="title">贴照片</div>
         <!-- 新建照片输入框。 -->
         <div class="add-photo">
-          <input type="file" id="file" @change="showPhoto" />
+          <input type="file" id="file" multiple="multiple" @change="showPhoto" />
           <!-- 没有选择图片 -->
           <div class="add-bt" v-if="url == ''">
             <i class="iconfont icon-tianjia"></i>
@@ -60,8 +80,8 @@
         <!-- 新建卡片 -->
         <div class="newcard">
           <!-- 新建卡片信息。 -->
-          <textarea class="textarea" placeholder="留言..."></textarea>
-          <input type="text" class="signature" placeholder="签名..." />
+          <textarea class="textarea" placeholder="留言..." v-model="photoMsg"></textarea>
+          <input type="text" class="signature" placeholder="签名..." v-model="photoName" />
         </div>
 
         <!-- 选择标签 -->
@@ -81,14 +101,14 @@
 
         <!-- 底部按钮 -->
         <div class="btn-bottom">
-          <button class="discard">丢弃</button>
-          <button class="confirm">确定</button>
+          <button class="discard" @click="giveup">丢弃</button>
+          <button class="confirm" @click="confirm">确定</button>
         </div>
       </div>
     </van-popup>
 
     <!-- 照片详细细节弹出层 -->
-    <van-popup v-model="isPhotoShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left">
+    <van-popup v-model="isPhotoShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left" @closed="photoClose">
       <div class="card-detail">
         <div class="title">
           <span>举报</span>
@@ -96,29 +116,31 @@
         </div>
         <!-- 显示照片墙的照片。 -->
         <div class="pic">
-          <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" />
+          <!-- <img :src="photoObj.imgUrl" alt="" /> -->
+          <video v-if="photoObj.imgUrl ? photoObj.imgUrl.includes('.mp4' || '.wmv' || '.avi' || '.MOV') : ''" :src="photoObj.imgUrl" style="width: 100%" autoplay loop controls></video>
+          <img v-else :src="photoObj.imgUrl" alt="" />
         </div>
         <!-- 卡片细节 -->
         <div class="card">
           <!-- 卡片头部分 -->
           <div class="card-title">
-            <span>12:54</span>
-            <span>留言</span>
+            <span>{{ dateOne(photoObj.moment) }}</span>
+            <span>{{ label[3][photoObj.label] }}</span>
           </div>
           <!-- 卡片信息。 -->
           <div class="card-message">
-            <p>122345</p>
+            <p>{{ photoObj.message }}</p>
           </div>
           <!-- 卡片尾部。 -->
           <div class="card-footer">
             <div class="like">
-              <span>
-                <i class="iconfont icon-aixin1"></i>
-                &nbsp;&nbsp;12
+              <span @click="toLikeDetail">
+                <i class="iconfont icon-aixin1" :class="photoObj.islike ? (photoObj.islike[0].count > 0 ? 'isLike' : '') : ''"></i>
+                &nbsp;&nbsp;{{ photoObj.like ? photoObj.like[0].count : "" }}
               </span>
-              <span> <i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;3 </span>
+              <span> <i class="iconfont icon-liuyan"></i>&nbsp;&nbsp;{{ photoObj.comcount ? photoObj.comcount[0].count : "" }} </span>
             </div>
-            <span>匿名</span>
+            <span>{{ photoObj.name }}</span>
           </div>
         </div>
         <!-- 评论。 -->
@@ -150,6 +172,10 @@
 <script>
 import { label, cardListColor, cardColor, portrait } from "@/utils/data";
 import { getObjectURL } from "@/utils/upload";
+import { dateOne } from "@/utils/time_format";
+// import { profileApi, insertWallApi, findWallPageApi, findWallPhotoTotalApi } from "@/api/index";
+import { findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
+
 export default {
   name: "Photo",
   data() {
@@ -159,19 +185,67 @@ export default {
       label, //照片墙tab栏标签。
       isLabelSelect: 0, //新建照片标签的选择。
       url: "", //图片显示的临时链接。
+      photoName: "", //添加照片签名。
+      photoMsg: "", //添加照片留言。
+      page: 1, //照片页码
+      pageSize: 10, //照片每页显示多少条
+      photoArr: [], //照片数组
+      photoObj: {}, //照片对象
+      isVideoUrl: false, //是否是视频链接
+      totalNumber: 0, //当前标签页视频总条数。
+      isLabelindex: 0, //tab 标签页索引
+      isLoading: -1, //加载状态 -1 加载 0 1
     };
   },
+  mounted() {
+    setTimeout(() => {
+      this.getPhotoData();
+    }, 150);
+    this.getPhotoCount();
+  },
   methods: {
+    dateOne, //时间格式，处理方法。
+    //获取照片墙数据。
+    getPhotoData() {
+      let data = {
+        page: this.page,
+        pageSize: this.pageSize,
+        type: 1, //代表是留言墙
+        label: this.isLabelindex - 1,
+        userID: this.$store.state.userIp, //当前登录用户的IP。
+      };
+      findWallPageApi(data).then((res) => {
+        this.photoArr = res.message;
+        if (this.photoArr.length >= 0) {
+          this.isLoading = 1;
+        }
+      });
+    },
+    //获取照片总条数。
+    getPhotoCount() {
+      // 查询留言墙或照片墙的总条数。
+      findWallPhotoTotalApi({ type: 1, label: this.isLabelindex - 1 }).then((res) => {
+        this.totalNumber = res.message[0].totalNumber;
+        console.log("每页总数:", this.totalNumber);
+      });
+    },
     // 切换tab栏的方法。
     toChangeTab(value, title) {
-      console.log(value, title); //1 '留言'
+      this.isLabelindex = value;
+      // 请求分类数据
+      this.photoArr = [];
+      this.isLoading = -1;
+      this.page = 1;
+      this.getPhotoData();
+      this.getPhotoCount();
     },
     // 打开弹出层
     addWall() {
       this.isAddShow = true;
     },
     // 切换照片详细细节弹出层的状态。
-    changePhotoShow() {
+    changePhotoShow(index) {
+      this.photoObj = this.photoArr[index];
       this.isPhotoShow = true;
     },
     //新建卡片选择标签
@@ -187,8 +261,133 @@ export default {
       //   this.isVideoUrl = true;
       // }
       let temporary = getObjectURL(document.getElementById("file").files[0]);
+
+      if (temporary.includes("mp4") || temporary.includes("avi") || temporary.includes("wmv") || temporary.includes("mov")) {
+        this.isVideoUrl = true;
+      }
+
       this.url = temporary;
+
       console.log("临时链接: ", this.url);
+    },
+    //确认按钮
+    confirm() {
+      // 创建提交给后端的数据项
+      let data = {
+        type: 1, // 1 代表的是照片墙。
+        message: this.photoMsg,
+        name: this.photoName,
+        userId: this.$store.state.userIp,
+        moment: new Date(),
+        label: this.isLabelSelect, //选择到对应标签的索引
+        color: -1, //留言背景颜色索引
+        imgUrl: this.url,
+      };
+      let file = document.getElementById("file");
+
+      // if (file.files.length > 0) {
+      //   let fromData = new FormData();
+      //   fromData.append("file", file.files[0]);
+      //   // 提交后端
+      //   profileApi(fromData).then((res) => {
+      //     this.url = res.imgUrl;
+      //     // -----------
+      //     data.imgUrl = this.url;
+      //     insertWallApi(data).then((res) => {
+      //       // 自己造一张卡片
+      //       let cradD = {
+      //         type: 1,
+      //         message: this.photoMsg,
+      //         name: this.photoName,
+      //         userId: this.$store.state.userIp,
+      //         moment: new Date(),
+      //         label: this.isLabelSelect, //选择到对应标签的索引
+      //         color: -1, //留言背景颜色索引
+      //         imgUrl: this.url, //图片地址
+      //         id: res.message.insertId,
+      //         islike: [{ count: 0 }],
+      //         like: [{ count: 0 }],
+      //         comcount: [{ count: 0 }],
+      //         report: [{ count: 0 }],
+      //         revoke: [{ count: 0 }],
+      //       };
+
+      //       this.photoName = "";
+      //       this.photoMsg = "";
+      //       this.url = "";
+      //     });
+      //   });
+      // }
+      this.isAddShow = false;
+    },
+    // 放弃按钮
+    giveup() {
+      // console.log(22);
+      this.isAddShow = false;
+    },
+    // 关闭详情遮罩层按钮。
+    photoClose() {
+      // console.log(22);
+      this.photoObj = ""; //关闭照片详细页面，展示清空数据。
+    },
+    //页码改变函数。
+    changePage() {
+      this.photoArr = [];
+      this.isLoading = -1;
+      document.documentElement.scrollTop = 0;
+      this.getPhotoData();
+    },
+    //点击红心按钮。
+    toLike(index) {
+      // 判断是否点击过
+      let likeData = {
+        wid: this.photoArr[index].id, //当前卡片的id
+        uid: this.$store.state.userIp, //当前登录的ip用户 150.12.16.18
+      };
+      // 判断当前ip地址有没有点击过爱心
+      likeCountApi(likeData).then((res) => {
+        console.log("是否点击爱心。", res.message[0].count);
+        if (res.message[0].count == 0) {
+          let data = {
+            wallId: this.photoArr[index].id, //当前卡片的id
+            userId: this.$store.state.userIp, //当前登录的ip用户
+            type: 0, //喜欢
+            moment: new Date(), //时间
+          };
+          insertFeedBackApi(data).then((res) => {
+            this.photoArr[index].like[0].count++;
+            this.photoArr[index].islike[0].count = 1;
+          });
+        } else {
+          this.photoArr[index].islike[0].count = 1;
+        }
+      });
+    },
+    // 详细照片点击红心。
+    toLikeDetail() {
+      // 判断是否点击过
+      let likeData = {
+        wid: this.photoObj.id, //当前卡片的id
+        uid: this.$store.state.userIp, //当前登录的ip用户 150.12.16.18
+      };
+      // 判断当前ip地址有没有点击过爱心
+      likeCountApi(likeData).then((res) => {
+        console.log("是否点击爱心。", res.message[0].count);
+        if (res.message[0].count == 0) {
+          let data = {
+            wallId: this.photoObj.id, //当前卡片的id
+            userId: this.$store.state.userIp, //当前登录的ip用户
+            type: 0, //喜欢
+            moment: new Date(), //时间
+          };
+          insertFeedBackApi(data).then((res) => {
+            this.photoObj.like[0].count++;
+            this.photoObj.islike[0].count = 1;
+          });
+        } else {
+          this.photoObj.islike[0].count = 1;
+        }
+      });
     },
   },
 };
