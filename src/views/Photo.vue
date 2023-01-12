@@ -111,7 +111,8 @@
     <van-popup v-model="isPhotoShow" position="right" :style="{ height: '100%', width: '100%' }" closeable close-icon="arrow-left" close-icon-position="top-left" @closed="photoClose">
       <div class="card-detail">
         <div class="title">
-          <span>举报</span>
+          <span v-show="photoObj.userId != this.$store.state.userIp">举报</span>
+          <span v-show="photoObj.userId == this.$store.state.userIp" @click="toDeletPhoto(photoObj.id)">删除照片</span>
           <span>联系墙主撕掉该便签</span>
         </div>
         <!-- 显示照片墙的照片。 -->
@@ -146,23 +147,23 @@
         <!-- 评论。 -->
         <div class="comment">评论 {{ photoObj.comcount ? photoObj.comcount[0].count : "" }}</div>
         <!-- 评论信息。 -->
-        <!-- <div class="comment-detail">
-          <div class="avatar">
-            <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" />
+        <div class="comment-detail" v-for="item in noteMsg" :key="item.id">
+          <div class="avatar" :style="`background:${portrait[item.imgUrl]}`">
+            <!-- <img src="http://cdn.xxoutman.cn/logo.jpg" alt="" style="width: 100%" /> -->
           </div>
           <div class="info">
             <div class="msg-title">
-              <div class="name">匿名</div>
-              <span class="time">15:34</span>
+              <div class="name">{{ item.name }}</div>
+              <span class="time">{{ dateOne(item.moment) }}</span>
             </div>
-            <p class="msg-comment" style="white-space: pre-wrap">哈哈哈</p>
+            <p class="msg-comment" style="white-space: pre-wrap">{{ item.comment }}</p>
           </div>
-        </div> -->
-        <!-- <span class="more">加载更多</span> -->
+        </div>
+        <span @click="getMoreComment" v-show="photoObj.comcount && photoObj.comcount[0].count != noteMsg.length && noteMsg.length >= 10" class="more">加载更多</span>
         <!-- 发表评论。 -->
         <div class="ipt-msg">
-          <textarea type="text" placeholder="发表评论"></textarea>
-          <i class="iconfont icon-fasong"></i>
+          <textarea type="text" placeholder="发表评论" v-model="iptMsg"></textarea>
+          <i class="iconfont icon-fasong" @click="sendMsg"></i>
         </div>
       </div>
     </van-popup>
@@ -174,7 +175,7 @@ import { label, cardListColor, cardColor, portrait } from "@/utils/data";
 import { getObjectURL } from "@/utils/upload";
 import { dateOne } from "@/utils/time_format";
 // import { profileApi, insertWallApi, findWallPageApi, findWallPhotoTotalApi } from "@/api/index";
-import { profileApi, findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
+import { deletePhotoApi, profileApi, findWallPageApi, findWallPhotoTotalApi, findCommentPageApi, insertFeedBackApi, likeCountApi, insertCommentApi, insertWallApi, deleteWallApi } from "@/api/index";
 
 export default {
   name: "Photo",
@@ -183,6 +184,7 @@ export default {
       isAddShow: false, //点击添加按钮展示。
       isPhotoShow: false, //照片详细页面弹出层。
       label, //照片墙tab栏标签。
+      portrait, //评论头像
       isLabelSelect: 0, //新建照片标签的选择。
       url: "", //图片显示的临时链接。
       photoName: "", //添加照片签名。
@@ -195,12 +197,14 @@ export default {
       totalNumber: 0, //当前标签页视频总条数。
       isLabelindex: 0, //tab 标签页索引
       isLoading: -1, //加载状态 -1 加载 0 1
+      noteMsg: [], //评论列表
+      commentPage: 1,
+      commentSize: 10, //每页评论有多少
+      iptMsg: "", //输入的评论
     };
   },
-  mounted() {
-    setTimeout(() => {
-      this.getPhotoData();
-    }, 150);
+  created() {
+    this.getPhotoData();
     this.getPhotoCount();
   },
   methods: {
@@ -247,7 +251,19 @@ export default {
     changePhotoShow(index) {
       this.photoObj = this.photoArr[index];
       this.isPhotoShow = true;
-      console.log(this.photoObj);
+      // console.log(this.photoObj);
+
+      this.commentPage = 1;
+      // 请求评论数据。
+      let data = {
+        page: this.commentPage,
+        pageSize: this.commentSize,
+        id: this.photoObj.id,
+      };
+      findCommentPageApi(data).then((res) => {
+        this.noteMsg = res.message;
+        console.log(this.noteMsg);
+      });
     },
     //新建卡片选择标签
     selectLabel(index) {
@@ -407,6 +423,76 @@ export default {
         }
       });
     },
+    //删除照片
+    toDeletPhoto() {
+      let data = {
+        id: this.photoObj.id,
+      };
+      deleteWallApi(data).then((res) => {
+        // console.log(res);
+      });
+
+      // 删除服务器的图片
+      let dataPic = {
+        urlpath: this.photoObj.imgUrl,
+      };
+      deletePhotoApi(dataPic).then((res) => {
+        // console.log(res);
+        this.$toast({
+          message: "照片删除成功",
+          icon: "http://cdn.xxoutman.cn/m_success.png",
+        });
+        this.getPhotoData();
+        this.isPhotoShow = false;
+      });
+    },
+    //添加评论
+    sendMsg() {
+      if (this.iptMsg.length <= 0) {
+        this.$toast({
+          message: "评论数据为空",
+          icon: "http://cdn.xxoutman.cn/m_error.png",
+          duration: 1000,
+        });
+        return;
+      }
+
+      //如果有用户就用头像，没有就用随机头像
+      let img = Math.floor(Math.random() * 14);
+      let data = {
+        wallId: this.photoObj.id,
+        userId: this.$store.state.userIp,
+        imgUrl: img,
+        comment: this.iptMsg, //评论
+        name: "匿名",
+        moment: new Date(),
+      };
+      // console.log(data);
+      insertCommentApi(data).then((res) => {
+        this.noteMsg.unshift(data);
+        this.photoObj.comcount[0].count++;
+      });
+      // 清空评论框
+      this.iptMsg = "";
+      this.$toast({
+        message: "评论成功",
+        icon: "http://cdn.xxoutman.cn/m_success.png",
+        duration: 1000,
+      });
+    },
+    // 加载更多评论。
+    getMoreComment() {
+      this.commentPage++;
+      // 请求评论数据。
+      let data = {
+        page: this.commentPage,
+        pageSize: this.commentSize,
+        id: this.photoObj.id,
+      };
+      findCommentPageApi(data).then((res) => {
+        this.noteMsg = this.noteMsg.concat(res.message);
+      });
+    },
   },
 };
 </script>
@@ -553,11 +639,15 @@ export default {
       font-size: 0.32rem;
       margin-bottom: 0.34rem;
       font-family: xp;
-      & > span:nth-child(1) {
+      & > span:nth-child(3) {
         color: #3b73f0;
         margin-right: 0.6rem;
       }
       & > span:nth-child(2) {
+        color: #f67770;
+        margin-right: 0.4rem;
+      }
+      & > span:nth-child(1) {
         color: #f67770;
         margin-right: 0.4rem;
       }
